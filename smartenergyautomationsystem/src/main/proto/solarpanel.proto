@@ -77,9 +77,6 @@ message SolarOutputRequest {
     // Solar panel that the client wants to monitor.
     string panel_id = 1;
 
-    // Number of seconds between readings.
-    // Example: 2 means the server should send a reading every 2 seconds.
-    int32 interval_seconds = 2;
 }
 
 /*

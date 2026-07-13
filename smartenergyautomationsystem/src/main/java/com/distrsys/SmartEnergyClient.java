@@ -150,7 +150,6 @@ public class SmartEnergyClient {
                 SolarOutputRequest
                         .newBuilder()
                         .setPanelId("SOLAR-001")
-                        .setIntervalSeconds(2)
                         .build();
 
         Iterator<SolarOutputReading> solarReadings =
