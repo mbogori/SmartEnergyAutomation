@@ -114,7 +114,7 @@ message ApplianceControlRequest {
     string command_value = 3;
 
     // Time when the command was sent.
-    int32 timestamp = 4;
+    int64 timestamp = 4;
 }
 
 /*
@@ -147,5 +147,5 @@ message ApplianceControlResponse {
     string message = 6;
 
     // Time when the server produced the response.
-    int32 timestamp = 7;
+    int64 timestamp = 7;
 }

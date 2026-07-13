@@ -66,7 +66,7 @@ message SolarStatusResponse {
 
     // Time when the reading was produced.
     // Stored as milliseconds since 1 January 1970.
-    int32 timestamp = 6;
+    int64 timestamp = 6;
 }
 
 /*
@@ -103,5 +103,5 @@ message SolarOutputReading {
     string status = 4;
 
     // Time when the reading was produced.
-    int32 timestamp = 5;
+    int64 timestamp = 5;
 }
