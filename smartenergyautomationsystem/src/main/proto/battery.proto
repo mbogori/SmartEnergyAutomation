@@ -1,0 +1,151 @@
+syntax = "proto3";
+
+package smartenergy.battery;
+option java_multiple_files = true;
+option java_package = "grpc.generated.battery";
+option java_outer_classname = "BatteryManagementProto";
+
+/*
+ * BATTERY MANAGEMENT SERVICE
+ *
+ * This service allows the Controller GUI to:
+ *
+ * 1. Enable or disable battery charging.
+ * 2. Check the current battery level.
+ * 3. Enable or disable power supply from the battery.
+ */
+
+service BatteryManagementService {
+
+    /*
+     * Unary RPC
+     *
+     * Enables or disables battery charging.
+     *
+     * One request is sent and one response is returned.
+     */
+
+    rpc EnableCharging(ChargingRequest) returns (ChargingResponse);
+
+    /*
+     * Unary RPC
+     *
+     * Returns the current battery percentage and status.
+     */
+
+    rpc GetBatteryLevel(BatteryLevelRequest) returns (BatteryLevelResponse);
+
+    /*
+     * Unary RPC
+     *
+     * Enables or disables electricity supply from the battery
+     * to the appliances.
+     */
+
+    rpc EnablePowerSupply(PowerSupplyRequest) returns (PowerSupplyResponse);
+}
+
+/*
+ * Request used to enable or disable charging.
+ */
+message ChargingRequest {
+
+    // Unique identifier for the battery.
+    // Example: "BATTERY-001"
+    string battery_id = 1;
+
+    // true means start charging.
+    // false means stop charging.
+    bool enable = 2;
+}
+
+/*
+ * Response returned after changing the charging state.
+ */
+message ChargingResponse {
+
+    // Battery who's charging state was changed.
+    string battery_id = 1;
+
+    // Indicates whether the requested operation succeeded.
+    bool success = 2;
+
+    // Shows whether the battery is currently charging.
+    bool charging = 3;
+
+    // Current battery percentage from 0 to 100.
+    int32 battery_level = 4;
+
+    // Short explanation of the result. E.g.: "Battery charging has been enabled."
+    string message = 5;
+}
+
+/*
+ * Request used to retrieve the battery level.
+ */
+
+message BatteryLevelRequest {
+
+    // Battery whose current level is required.
+    string battery_id = 1;
+}
+
+/*
+ * Response containing the current battery information.
+ */
+message BatteryLevelResponse {
+
+    // ID of the battery.
+    string battery_id = 1;
+
+    // Current charge level from 0 to 100.
+    int32 battery_level = 2;
+
+    // Current battery condition. "FULL", "CHARGING", "NORMAL", or "LOW"
+    string status = 3;
+
+    // Shows whether the battery is currently charging.
+    bool charging = 4;
+
+    // Shows whether the battery is currently supplying power.
+    bool supplying_power = 5;
+
+    // Short description.
+    string message = 6;
+}
+
+/*
+ * Request used to control power supply from the battery.
+ */
+message PowerSupplyRequest {
+
+    // Battery that should supply or stop supplying power.
+    string battery_id = 1;
+
+    // true means start supplying power.
+    // false means stop supplying power.
+    bool enable = 2;
+}
+
+/*
+ * Response returned after changing the power-supply state.
+ */
+ 
+message PowerSupplyResponse {
+
+    // ID of the battery.
+    string battery_id = 1;
+
+    // Indicates whether the operation succeeded.
+    bool success = 2;
+
+    // Shows whether the battery is currently supplying power.
+    bool supplying_power = 3;
+
+    // Battery level after the operation.
+    int32 battery_level = 4;
+
+    // Short explanation of the result.
+    // Example: "Battery power supply has been enabled."
+    string message = 5;
+}

@@ -1,0 +1,107 @@
+syntax = "proto3";
+
+package smartenergy.solar;
+option java_multiple_files = true;
+option java_package = "grpc.generated.solar";
+option java_outer_classname = "SolarPanelProto";
+
+/*
+ * SOLAR PANEL SERVICE
+ *
+ * This service allows the Controller GUI to:
+ *
+ * 1. Request the current status of the solar panel.
+ * 2. Continuously receive live solar-output readings.
+ */
+service SolarPanelService {
+
+    /*
+     * Unary RPC
+     *
+     * The client sends one request containing the solar-panel ID.
+     * The server returns one response containing the current solar status.
+     */
+    rpc GetSolarStatus(SolarStatusRequest) returns (SolarStatusResponse);
+
+    /*
+     * Server-streaming RPC
+     *
+     * The client sends one request. The server continuously sends solar-output readings.
+     *
+     * The stream ends when the client cancels it, the server stops it, or an error occurs.
+     */
+
+    rpc StreamSolarOutput(SolarOutputRequest) returns (stream SolarOutputReading);
+}
+
+/*
+ * Request used by GetSolarStatus.
+ */
+message SolarStatusRequest {
+
+    // Unique identifier for the solar panel.
+    // Example: "SOLAR-001"
+    string panel_id = 1;
+}
+
+/*
+ * Response returned by GetSolarStatus.
+ */
+message SolarStatusResponse {
+
+    // ID of the solar panel whose status was requested.
+    string panel_id = 1;
+
+    // Current state of the solar panel. e.g. "ACTIVE", "INACTIVE", or "FAULT"
+    string status = 2;
+
+    // Current amount of electricity being generated in watts.
+    double current_output_watts = 3;
+
+    // Current sunlight level as a percentage from 0 to 100.
+    double sunlight_level = 4;
+
+    // Short explanation. e.g. "Solar panel is operating normally."
+    string message = 5;
+
+    // Time when the reading was produced.
+    // Stored as milliseconds since 1 January 1970.
+    int32 timestamp = 6;
+}
+
+/*
+ * Request used to begin the StreamSolarOutput RPC.
+ */
+message SolarOutputRequest {
+
+    // Solar panel that the client wants to monitor.
+    string panel_id = 1;
+
+    // Number of seconds between readings.
+    // Example: 2 means the server should send a reading every 2 seconds.
+    int32 interval_seconds = 2;
+}
+
+/*
+ * A single solar-output reading sent through the server stream.
+ *
+ * The server sends multiple SolarOutputReading messages
+ * during one RPC call.
+ */
+message SolarOutputReading {
+
+    // Solar panel that produced this reading.
+    string panel_id = 1;
+
+    // Amount of electricity currently being generated in watts.
+    double output_watts = 2;
+
+    // Current sunlight level as a percentage.
+    double sunlight_level = 3;
+
+    // Current operating state. e.g. "ACTIVE", "LOW_SUNLIGHT", or "INACTIVE"
+    string status = 4;
+
+    // Time when the reading was produced.
+    int32 timestamp = 5;
+}

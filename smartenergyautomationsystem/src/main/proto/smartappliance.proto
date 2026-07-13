@@ -1,0 +1,151 @@
+syntax = "proto3";
+
+package smartenergy.appliance;
+option java_multiple_files = true;
+option java_package = "grpc.generated.appliance";
+option java_outer_classname = "SmartApplianceProto";
+
+/*
+ * SMART APPLIANCE SERVICE
+ *
+ * This service allows the Controller GUI to:
+ *
+ * 1. Upload multiple electricity-consumption readings for analysis.
+ * 2. Send appliance-control commands and receive live responses.
+ */
+
+service SmartApplianceService {
+
+    /*
+     * Client-streaming RPC
+     *
+     * The Controller GUI sends multiple consumption readings.
+     *
+     * After the client finishes uploading the readings, the server analyses them and sends one final response.
+     */
+
+    rpc AnalyzeConsumptionHistory(stream ConsumptionReading) returns (ConsumptionAnalysis);
+
+    /*
+     * Bidirectional-streaming RPC
+     *
+     * The client can continuously send appliance commands.
+     * The server can continuously return appliance status updates.
+     *
+     * Both sides can send messages independently while the RPC connection remains open.
+     */
+
+    rpc ApplianceControl(stream ApplianceControlRequest)
+        returns (stream ApplianceControlResponse);
+}
+
+
+
+/*
+ * One electricity-consumption reading uploaded by the Controller GUI.
+ *
+ * Several of these messages are sent during one
+ * AnalyzeConsumptionHistory call.
+ */
+message ConsumptionReading {
+
+    string appliance_id = 1;
+
+    string appliance_name = 2;
+
+    // Amount of power being used at this moment in watts.
+    double power_consumption_watts = 3;
+
+    // Length of time represented by this reading in minutes.
+    //
+    // This helps the server estimate the amount of electricity consumed during the recorded period.
+    int32 duration_minutes = 4;
+
+    // Time in milliseconds when the reading was recorded.
+    int64 timestamp = 5;
+}
+
+/*
+ * Final result returned after all consumption readings have been received and analysed.
+ */
+message ConsumptionAnalysis {
+
+    // Number of consumption readings received by the server.
+    int32 readings_processed = 1;
+
+    // Total estimated electricity consumption in kilowatt-hours.
+    double total_consumption_kwh = 2;
+
+    // Average power consumption across the uploaded readings.
+    double average_consumption_watts = 3;
+
+    // Efficiency score from 0 to 100.
+    
+    // A higher score means that the recorded appliance usage was more energy efficient.
+    double efficiency_score = 4;
+
+    // Estimated amount of electricity that could be saved by improving appliance usage.
+    double estimated_savings_kwh = 5;
+
+    // Human-readable analysis.e.g.: "Most consumption occurred during evening peak hours."
+    string summary = 6;
+}
+
+/*
+ * Command sent from the Controller GUI to an appliance.
+ *
+ * Multiple command messages can be sent during the same
+ * ApplianceControl connection.
+ */
+message ApplianceControlRequest {
+
+    // Appliance that should receive the command.
+    string appliance_id = 1;
+
+    // Command requested by the Controller GUI.
+    //
+    // Example values: "TURN_ON" "TURN_OFF" "SET_ECO_MODE" "GET_STATUS"
+    string command = 2;
+
+    // Optional command value.
+    //
+    // Examples: command = "SET_ECO_MODE", command_value = "ON" or command = "SET_TEMPERATURE", command_value = "20"
+    // Left empty when the command does not require a value.
+    string command_value = 3;
+
+    // Time when the command was sent.
+    int32 timestamp = 4;
+}
+
+/*
+ * Status update returned by the server after processing an appliance-control request.
+ *
+ * The server may send multiple status updates during one bidirectional-streaming connection.
+ */
+message ApplianceControlResponse {
+
+    // Appliance associated with this response.
+    string appliance_id = 1;
+
+    // Indicates whether the command was processed successfully.
+    bool success = 2;
+
+    // Current operating status of the appliance.
+    
+    // Example values: "ON" "OFF" "ECO_MODE" "ERROR"
+    string current_status = 3;
+
+    // Current appliance power consumption in watts.
+    double power_consumption_watts = 4;
+
+    // Current eco-mode setting.
+    
+    // Example values: "ON", "OFF", or "NOT_SUPPORTED"
+    string eco_mode = 5;
+
+    // Explanation of the result. Example: "Living Room Heater was switched on successfully."
+    string message = 6;
+
+    // Time when the server produced the response.
+    int32 timestamp = 7;
+}
