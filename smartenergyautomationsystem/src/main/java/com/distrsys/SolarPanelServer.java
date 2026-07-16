@@ -15,6 +15,9 @@ import io.grpc.stub.StreamObserver;
 
 /**
  * gRPC server implementation for the Solar Panel Service.
+ *
+ * When the server starts, it registers itself using jmDNS
+ * so that the Controller can discover it.
  */
 public class SolarPanelServer
         extends SolarPanelServiceGrpc.SolarPanelServiceImplBase {
@@ -22,50 +25,60 @@ public class SolarPanelServer
     private static final Logger logger =
             Logger.getLogger(SolarPanelServer.class.getName());
 
-    /**
-     * Starts the Solar Panel gRPC server.
-     */
-    public static void main(String[] args) {
+public static void main(String[] args) {
 
-        SolarPanelServer solarPanelServer = new SolarPanelServer();
+    SolarPanelServer solarPanelServer =
+            new SolarPanelServer();
 
-        int port = 50051;
+    try {
+        Server server = ServerBuilder
+                .forPort(50051)
+                .addService(solarPanelServer)
+                .build()
+                .start();
 
-        try {
-            Server server = ServerBuilder
-                    .forPort(port)
-                    .addService(solarPanelServer)
-                    .build()
-                    .start();
+        logger.info(
+                "Solar Panel Server started, listening on port 50051"
+        );
 
-            logger.info(
-                    "Solar Panel Server started, listening on port " + port
-            );
+        System.out.println(
+                "Solar Panel Server started, listening on port 50051"
+        );
 
-            System.out.println(
-                    "Solar Panel Server started, listening on port " + port
-            );
+        /*
+         * The server registers itself so that clients
+         * can discover it.
+         */
+        ServiceRegistration esr =
+                ServiceRegistration.getInstance();
 
-            server.awaitTermination();
+        esr.registerService(
+                "_smartenergy._tcp.local.",
+                "SolarPanelService",
+                50051,
+                "service=SolarPanelService"
+        );
 
-        } catch (IOException exception) {
-            logger.log(
-                    Level.SEVERE,
-                    "The Solar Panel Server could not be started.",
-                    exception
-            );
+        server.awaitTermination();
 
-        } catch (InterruptedException exception) {
-            Thread.currentThread().interrupt();
+    } catch (IOException exception) {
+        logger.log(
+                Level.SEVERE,
+                "The Solar Panel Server could not start or register.",
+                exception
+        );
 
-            logger.log(
-                    Level.SEVERE,
-                    "The Solar Panel Server was interrupted.",
-                    exception
-            );
-        }
+    } catch (InterruptedException exception) {
+        Thread.currentThread().interrupt();
+
+        logger.log(
+                Level.SEVERE,
+                "The Solar Panel Server was interrupted.",
+                exception
+        );
     }
-
+}
+   
     /**
      * Unary RPC implementation.
      *

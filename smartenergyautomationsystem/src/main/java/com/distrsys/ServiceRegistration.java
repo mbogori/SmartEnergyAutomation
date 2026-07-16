@@ -2,127 +2,106 @@ package com.distrsys;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceInfo;
 
 /**
- * Registers Smart Energy gRPC services using jmDNS.
+ * Registers services using jmDNS.
  *
- * Each server creates an instance of this class and publishes
- * its service name, network address and port number.
+ * This class follows the singleton pattern used in the
+ * jmDNS laboratory example.
+ *
+ * Only one ServiceRegistration object is created inside
+ * each running server application.
  */
 public class ServiceRegistration {
 
-    private static final Logger logger =
-            Logger.getLogger(ServiceRegistration.class.getName());
+    /*
+     * Stores the single ServiceRegistration object.
+     */
+    private static ServiceRegistration instance;
 
     /*
-     * All three Smart Energy services use the same service type.
-     *
-     * The individual services are identified by their different
-     * service names.
+     * jmDNS object used to register services.
      */
-    public static final String SERVICE_TYPE =
-            "_smartenergy._tcp.local.";
-
-    private JmDNS jmdns;
-    private ServiceInfo serviceInfo;
+    private final JmDNS jmdns;
 
     /**
-     * Registers one Smart Energy service using jmDNS.
+     * Private constructor prevents other classes from creating
+     * ServiceRegistration objects using the new keyword.
+     */
+    private ServiceRegistration() throws IOException {
+
+        /*
+         * Create jmDNS using the local computer's network address.
+         */
+        jmdns = JmDNS.create(
+                InetAddress.getLocalHost()
+        );
+    }
+
+    /**
+     * Returns the single ServiceRegistration object.
      *
-     * @param serviceName name used to identify the service
-     * @param port port on which the gRPC server is running
+     * If the object does not exist yet, it is created.
+     */
+    public static ServiceRegistration getInstance()
+            throws IOException {
+
+        if (instance == null) {
+            instance = new ServiceRegistration();
+        }
+
+        return instance;
+    }
+
+    /**
+     * Registers a service so that clients can discover it.
+     *
+     * @param type jmDNS service type
+     * @param name name used to identify the service
+     * @param port port on which the service is running
      * @param description description of the service
-     * @throws IOException if jmDNS cannot be created or registered
      */
     public void registerService(
-            String serviceName,
+            String type,
+            String name,
             int port,
             String description) throws IOException {
 
         /*
-         * Obtain the network address of the computer running
-         * the service.
-         */
-        InetAddress localAddress =
-                InetAddress.getLocalHost();
-
-        /*
-         * Create the jmDNS instance using the local address.
-         */
-        jmdns = JmDNS.create(localAddress);
-
-        /*
          * Create the service information that will be
-         * advertised on the local network.
+         * advertised through jmDNS.
          */
-        serviceInfo = ServiceInfo.create(
-                SERVICE_TYPE,
-                serviceName,
+        ServiceInfo serviceInfo = ServiceInfo.create(
+                type,
+                name,
                 port,
                 description
         );
 
         /*
-         * Publish the service through jmDNS.
+         * Register and advertise the service.
          */
         jmdns.registerService(serviceInfo);
 
-        logger.info(
-                serviceName
-                        + " registered successfully using jmDNS."
+        System.out.println(
+                name + " registered successfully using jmDNS."
         );
 
         System.out.println(
-                serviceName
-                        + " registered successfully using jmDNS."
-        );
-
-        System.out.println(
-                "Service type: " + SERVICE_TYPE
+                "Service type: " + type
         );
 
         System.out.println(
                 "Service address: "
-                        + localAddress.getHostAddress()
+                        + jmdns.getInetAddress().getHostAddress()
         );
 
         System.out.println(
                 "Service port: " + port
         );
-    }
-
-    /**
-     * Removes the registered service and closes jmDNS.
-     */
-    public void unregisterService() {
-
-        if (jmdns != null) {
-
-            if (serviceInfo != null) {
-                jmdns.unregisterService(serviceInfo);
-
-                logger.info(
-                        serviceInfo.getName()
-                                + " unregistered from jmDNS."
-                );
-            }
-
-            try {
-                jmdns.close();
-
-            } catch (IOException exception) {
-                logger.log(
-                        Level.SEVERE,
-                        "Error while closing jmDNS.",
-                        exception
-                );
-            }
-        }
     }
 }
 

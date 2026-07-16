@@ -40,47 +40,57 @@ public class BatteryManagementServer
      */
     public static void main(String[] args) {
 
-        BatteryManagementServer batteryManagementServer =
-                new BatteryManagementServer();
+    BatteryManagementServer batteryManagementServer =
+            new BatteryManagementServer();
 
-        int port = 50052;
+    try {
+        Server server = ServerBuilder
+                .forPort(50052)
+                .addService(batteryManagementServer)
+                .build()
+                .start();
 
-        try {
-            Server server = ServerBuilder
-                    .forPort(port)
-                    .addService(batteryManagementServer)
-                    .build()
-                    .start();
+        logger.info(
+                "Battery Management Server started, listening on port 50052"
+        );
 
-            logger.info(
-                    "Battery Management Server started, listening on port "
-                            + port
-            );
+        System.out.println(
+                "Battery Management Server started, listening on port 50052"
+        );
 
-            System.out.println(
-                    "Battery Management Server started, listening on port "
-                            + port
-            );
+        /*
+         * The server registers itself so that clients
+         * can discover it.
+         */
+        ServiceRegistration esr =
+                ServiceRegistration.getInstance();
 
-            server.awaitTermination();
+        esr.registerService(
+                "_smartenergy._tcp.local.",
+                "BatteryManagementService",
+                50052,
+                "service=BatteryManagementService"
+        );
 
-        } catch (IOException exception) {
-            logger.log(
-                    Level.SEVERE,
-                    "The Battery Management Server could not be started.",
-                    exception
-            );
+        server.awaitTermination();
 
-        } catch (InterruptedException exception) {
-            Thread.currentThread().interrupt();
+    } catch (IOException exception) {
+        logger.log(
+                Level.SEVERE,
+                "The Battery Management Server could not start or register.",
+                exception
+        );
 
-            logger.log(
-                    Level.SEVERE,
-                    "The Battery Management Server was interrupted.",
-                    exception
-            );
-        }
+    } catch (InterruptedException exception) {
+        Thread.currentThread().interrupt();
+
+        logger.log(
+                Level.SEVERE,
+                "The Battery Management Server was interrupted.",
+                exception
+        );
     }
+}
 
     /**
      * Unary RPC implementation.
