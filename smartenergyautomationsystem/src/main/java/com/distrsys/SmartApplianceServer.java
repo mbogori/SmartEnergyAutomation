@@ -36,50 +36,59 @@ public class SmartApplianceServer
     /**
      * Starts the Smart Appliance gRPC server.
      */
-    public static void main(String[] args) {
+public static void main(String[] args) {
 
-        SmartApplianceServer smartApplianceServer =
-                new SmartApplianceServer();
+    SmartApplianceServer smartApplianceServer =
+            new SmartApplianceServer();
 
-        int port = 50053;
+    try {
+        Server server = ServerBuilder
+                .forPort(50053)
+                .addService(smartApplianceServer)
+                .build()
+                .start();
 
-        try {
-            Server server = ServerBuilder
-                    .forPort(port)
-                    .addService(smartApplianceServer)
-                    .build()
-                    .start();
+        logger.info(
+                "Smart Appliance Server started, listening on port 50053"
+        );
 
-            logger.info(
-                    "Smart Appliance Server started, listening on port "
-                            + port
-            );
+        System.out.println(
+                "Smart Appliance Server started, listening on port 50053"
+        );
 
-            System.out.println(
-                    "Smart Appliance Server started, listening on port "
-                            + port
-            );
+        /*
+         * The server registers itself so that clients
+         * can discover it.
+         */
+        ServiceRegistration esr =
+                ServiceRegistration.getInstance();
 
-            server.awaitTermination();
+        esr.registerService(
+                "_smartenergy._tcp.local.",
+                "SmartApplianceService",
+                50053,
+                "service=SmartApplianceService"
+        );
 
-        } catch (IOException exception) {
-            logger.log(
-                    Level.SEVERE,
-                    "The Smart Appliance Server could not be started.",
-                    exception
-            );
+        server.awaitTermination();
 
-        } catch (InterruptedException exception) {
-            Thread.currentThread().interrupt();
+    } catch (IOException exception) {
+        logger.log(
+                Level.SEVERE,
+                "The Smart Appliance Server could not start or register.",
+                exception
+        );
 
-            logger.log(
-                    Level.SEVERE,
-                    "The Smart Appliance Server was interrupted.",
-                    exception
-            );
-        }
+    } catch (InterruptedException exception) {
+        Thread.currentThread().interrupt();
+
+        logger.log(
+                Level.SEVERE,
+                "The Smart Appliance Server was interrupted.",
+                exception
+        );
     }
-
+}
     /**
      * Client-streaming RPC implementation.
      *
