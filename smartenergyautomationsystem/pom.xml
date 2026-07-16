@@ -14,7 +14,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <java.version>17</java.version>
+        <java.version>25</java.version>
         <grpc.version>1.63.0</grpc.version>
         <protobuf.version>4.27.3</protobuf.version>
         <slf4j.version>2.0.13</slf4j.version>
