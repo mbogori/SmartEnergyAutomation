@@ -57,8 +57,7 @@ public static void main(String[] args) {
         );
 
         /*
-         * The server registers itself so that clients
-         * can discover it.
+         * The server registers itself so that clients can discover it.
          */
         ServiceRegistration esr =
                 ServiceRegistration.getInstance();
